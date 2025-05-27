@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: way4
+  namespace: way4
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: way4
+  template:
+    metadata:
+      labels:
+        app: way4
+    spec:
+      restartPolicy: "Always"
+      hostNetwork: true
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - **.***.***.***
+      containers:
+        - name: way4
+          image: IMAGE
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: TZ
+              value: Europe/Moscow
+          volumeMounts:
+            - name: host-certs
+              mountPath: /usr/local/share/ca-certificates
+              readOnly: true
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - update-ca-certificates
+      volumes:
+        - name: host-certs
+          hostPath:
+            path: /usr/local/share/ca-certificates
+            type: Directory
