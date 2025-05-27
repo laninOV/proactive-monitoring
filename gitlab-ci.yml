@@ -1,0 +1,30 @@
+variables:
+  REGISTRY: "******-********.region.vtb.ru:5000"
+
+stages:
+  - build-push
+  - deploy
+
+build-push:
+  stage: build-push
+  script:
+    - podman build
+      --build-arg API_USER_ARG="$API_USER_ARG"
+      --build-arg API_PASSWORD_ARG="$API_PASSWORD_ARG"
+      --build-arg MAIL_PASSWORD_ARG="$MAIL_PASSWORD_ARG"
+      -t $REGISTRY/way4/way4_script:$CI_COMMIT_SHORT_SHA .
+    - podman push $REGISTRY/way4/way4_script:$CI_COMMIT_SHORT_SHA --tls-verify=false
+  only:
+    - main
+  tags:
+    - ******-********
+
+deploy:
+  stage: deploy
+  script:
+    - sed -i "s|IMAGE|$REGISTRY/way4/way4_script:$CI_COMMIT_SHORT_SHA|" k8s/deployment.yaml
+    - kubectl apply -f k8s/deployment.yaml
+  only:
+    - main
+  tags:
+    - ******-********
